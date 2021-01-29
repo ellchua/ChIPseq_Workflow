@@ -1,8 +1,7 @@
 # ChIPseq_Workflow
 ## 1. FastQC
 FastQC aims to provide a simple way to do some quality checks on raw sequence data coming from high throughput sequencing pipelines. It can give us a quick impression of whether the data has any problems that we should be aware of before doing any further analysis.
-
-The data for the NF-$\kappa$B project can be found in `/home/data/projects/nfkb`. 
+ 
 To unzip `.gz` files, we can use `zcat`. To view the head of a `.gz` file, use:
 ```
 $ zcat filename.fastq.gz | head
@@ -21,7 +20,7 @@ View other options for `fastqc` by typing `fastqc --help` in the command line.
 Once the output file has been generated, use `rsync` to transfer the output files into your local machine.
 ```
 $ rsync [options] [SRC] [DEST]
-$ rsync ellora@cbio.yale-nus.edu.sg:/home/ellora/output/[folder_name]/* ~/Desktop/nfkb/[folder_name]
+$ rsync -azvP ellora@cbio.yale-nus.edu.sg:/home/ellora/output/[folder_name]/* ~/Desktop/nfkb/[folder_name]
 ```
 The * indicates all files in the specified folder.
 
@@ -38,7 +37,7 @@ BWA first needs to construct the FM-index for the reference genome. This step on
 $ bwa index [ref.fa]
 $ bwa index hg38.fa
 ```
-Once you have finished preparing your indexed reference you can map your reads to the reference. For our project, the BWA index can be found in `/home/shared/genomes/hg38/BWAIndex`.
+Once you have finished preparing your indexed reference you can map your reads to the reference. In the harmstonLab server, the BWA index can be found in `/home/shared/genomes/hg38/BWAIndex`.
 
 ### 2.2 BWA Alignment
 ### Single-end Reads
@@ -53,7 +52,6 @@ $ bwa samse /home/ellora/data/BWAIndex/hg38.fa RelA_rep1.sai /home/ellora/data/R
 ```
 [The BWA manual](http://bio-bwa.sourceforge.net/bwa.shtml) for explains more on the other sub-commands and options available for use with the `bwa` command. 
 ### Paired-end reads
-For paired end reads:
 ```
 $ bwa aln [-t threads] [ref.fa] [reads1.fq] > [reads1.sai]
 $ bwa aln [-t threads] [ref.fa] [reads2.fq] > [reads2.sai]
@@ -161,7 +159,7 @@ Then we convert `.bdg` files to `.bw` files using:
 $ bedGraphToBigWig [in.bedGraph] [chrom.sizes] [out.bw]
 $ bedGraphToBigWig RelB_rep1_treat_pileup_sorted.bdg /home/ellora/data/hg38_chroms.size RelB_rep1_treat_pileup_sorted.bw
 ```
-For our project, the `chrom.sizes` can be found in `/home/shared/genomes/hg38/hg38_chroms.size`.
+In the harmstonLab server, the `chrom.sizes` can be found in `/home/shared/genomes/hg38/hg38_chroms.size`.
   
 Using `rsync`, we can transfer the `.bw` files to our local machine **to view the peaks in IGV**.
 
@@ -179,13 +177,13 @@ ChIPQC is a package for assessing quality of ChIP-seq samples and experiments. C
 library(ChIPQC)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 ```
-and it's more or less 3 lines of code (adjust parameters according to needs of experiment):
+Then it's more or less 3 lines of code (adjust parameters according to needs of experiment):
 ```
 x = read.delim("batch2_samples.txt")
 chip.qc = ChIPQC(x, annotation = "hg38")
 ChIPQCreport(chip.qc)
 ```
-# Steps 1 to 3 can be automated using shell scripts `.sh`! :)
+> Steps 1 to 3 can be automated using shell scripts `.sh`! :)
 
 ## 4. Analysing Peak Data with R
 ### 4.1 GenomicRanges
@@ -238,8 +236,8 @@ There is also a output `.txt` file which mimics the input file type, with some a
 
 **Columns 11 and 12** correspond to the local and global IDR value, respectively.
 
-* The **global IDR** is the value used to calculate the scaled IDR number in column 5, it is analogous to a multiple hypothesis correction on a p-value to compute an FDR.
 * The **local IDR** is akin to the posterior probability of a peak belonging to the irreproducible noise component. You can read [this](https://projecteuclid.org/euclid.aoas/1318514284) super technical paper for more details.
+* The **global IDR** is the value used to calculate the scaled IDR number in column 5, it is analogous to a multiple hypothesis correction on a p-value to compute an FDR.
 
 **Columns 13 through 16** correspond to Replicate 1 peak data and **Columns 17 through 20** correspond to Replicate 2 peak data.
 
@@ -248,7 +246,7 @@ More of the output `.txt` file format can be understood [here](https://github.co
 **Note:** For *raw* IDR values, a peak with 0.05 IDR means that peak has a 5% chance of being an irreproducible discovery (i.e. peaks with 0.00 IDR means it is very reproducible). However, if we look at column 5 of the output `.txt` file, a higher score means the peak is more reproducible.
 
 #### 4.2.2 Plot Output
-![](images/figures/idrValues.txt.png)
+![](images/idrValues.txt.png)
 **Upper Left:** Replicate 1 peak ranks versus Replicate 2 peak ranks - peaks that do not pass the specified IDR threshold are coloured red.
 
 **Upper Right:** Replicate 1 log10 peak scores versus Replicate 2 log10 peak scores - peaks that do not pass the specified IDR threshold are coloured red.
@@ -256,7 +254,7 @@ More of the output `.txt` file format can be understood [here](https://github.co
 **Bottom Row:** Peak rank versus IDR scores are plotted in black. The overlayed boxplots display the distribution of IDR values in each 5% quantile. The IDR values are thresholded at the optimization precision - 1e^-6^ by default.
 
 ### 4.3 Combining 4.1 and 4.2
-See `RelB_peak_analysis.R` in `Users/ellora/Desktop/chip_analysis`.
+See `RelB_peak_analysis.R`.
 
 Some guiding questions to ask while doing analysis:
 
@@ -294,7 +292,7 @@ The View filter determines which tests to display in output tables based on thei
 ## 6. Genomation
 See `Genomation.R` in local machine.
 
-It's important to note that when clustering with Genomation, first ordering the dataset into clusters before scaling it will give different clustering patterns than if you scaled the unordered data first and then cluster the scaled data. In HarmstonLab, we go by the convention of scaling it first before ordering it.  
+It's important to note that when clustering with Genomation, first ordering the dataset into clusters before scaling it will give different clustering patterns than if you scaled the unordered data first and then cluster the scaled data. In harmstonLab, we go by the convention of scaling it first before ordering it.  
 
 **Note:** While reading in peak files, if you use the `remove.unusual` option in `readGeneric()`, the warning of `x windows fall off the target` will no longer appear.
 

@@ -1,4 +1,34 @@
-# ChIPseq_Workflow
+# ChIPseq
+There are a few places to obtain ChIP-seq files:
+
+1. [ENCODE Project](https://www.encodeproject.org/) has many files, the most useful of which are the IDR thresholded `.bed` files
+2. In-house sequencing 
+3. [Gene Expression Omnibus (GEO)](https://www.ncbi.nlm.nih.gov/geo/) is a bit more of a mixed bag. There could be `.bed` files but otherwise, the most useful part about GEO is access to the corresponding Sequence Read Archive (SRA) that stores all the raw files. 
+
+I have personally found these two websites to be extremely helpful in finding public ChIP-Seq datasets of my interest:
+
+1. [ChIP-Atlas Dataset Search](https://chip-atlas.org/search)
+2. [Cistrome DB](http://www.cistrome.org/db/#/)
+
+# Workflow
+
+1. If the starting point is `.bed` files obtained from ENCODE, those can be immediately used in the analysis
+2. If the starting point is `.fastq` files, go straight to step 1. FastQC. 
+3. If the starting point is GEO and obtaining files from SRA, follow the step below:
+
+## Converting `.sra` files to `.fastq` files
+Do obtain the raw data from SRA, we can use the `prefetch` and `fastq-dump` commands from SRA Toolkit to obtain datasets via SRA accession numbers
+
+```
+$ prefetch [acession_1] [acession_2] [acession_3]
+```
+
+This retrieves datasets in the `.sra` format which we use as input in `fastq-dump` to then obtain files in `.fastq` format.
+
+```
+$ fastq-dump *.sra
+```
+
 ## 1. FastQC
 FastQC aims to provide a simple way to do some quality checks on raw sequence data coming from high throughput sequencing pipelines. It can give us a quick impression of whether the data has any problems that we should be aware of before doing any further analysis.
  
@@ -13,7 +43,7 @@ $ cat file.txt | head
 To run fastqc on a dataset:
 ```
 $ fastqc [-o output dir] seqfile1 .. seqfileN
-$ fastqc -o /home/ellora/output/RelA_rep1 RelA_rep1.fastq.gz
+$ fastqc -o /home/ellora/output/ *.fastq.gz
 ```
 View other options for `fastqc` by typing `fastqc --help` in the command line. 
 
@@ -84,7 +114,19 @@ The `.bam` file must be sorted before indexing.
 $ samtools sort [-@ threads] [in.bam] [-o out.bam]
 $ samtools sort -@ 10 RelA_rep1.bam > RelA_rep1_sorted.bam
 ```
-#### 2.3.3 index
+
+> We can combine the steps above (changing `bwa aln` for `bwa mem`) into a pipe to simplify the process:
+```
+bwa mem -t 20 /home/ellora/BWAIndex/hg38.fa $f.fastq | samtools view -q 10 -b -@ 10 | samtools sort -@ 10 -o /home/ellora/projects/nrf2/brca2/bam/$f.bam
+```
+
+#### 2.3.3 flagstat
+After obtaining the **sorted** `.bam` file, we run the code below for quality control to ensure that the `.bam` is of decent quality.
+```
+samtools flagstat -@ 10 in.sorted.bam > out.bam_stats.txt
+```
+
+#### 2.3.4 index
 The indexing part is needed to open the `.bam` files in Integrative Genomics Viewer (IGV). We get a `.bai` file.
 ```
 $ samtools index [in.bam]
@@ -92,8 +134,9 @@ $ samtools index RelA_rep1_sorted.bam
 ```
 It's generally good habit to view the data/reads in IGV as a qualitative quality control.
 
+
 ## 3. Peak Calling
-Peak calling (converting reads in `.bam` to signal coverage), the next step in our workflow, is a computational method used to identify areas in the genome that have been enriched with aligned reads as a consequence of performing a ChIP-sequencing experiment. There are various tools that are available for peak calling, the one that we will be using is MACS2.
+Peak calling (converting reads in `.bam` to signal coverage), the next step in our workflow, is a computational method used to identify areas in the genome that have been enriched with aligned reads as a consequence of performing a ChIP-sequencing experiment. There are various tools that are available for peak calling, the one that we will be using is MACS2 (or MACS3).
 
 ### Without An Input File
 ```

@@ -154,7 +154,7 @@ $ macs2 callpeak -t RelA_rep1_sorted.bam -c RelA_input.bam -f BAM -n RelA_rep1 -
 ```
 
 ### For .broadPeak Files
-Make sure that the **--broad flag** is included
+Normally to be used for ChIP-Seq of histone modifications. Make sure that the **--broad flag** is included.
 ```
 $ macs2 callpeak [-t in.bam] [-c control.bam] [-f format] [-n output NAME] [--broad] [--bdg] [--outdir]
 ```

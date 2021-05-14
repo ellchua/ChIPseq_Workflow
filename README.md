@@ -17,13 +17,13 @@ I have personally found these two websites to be extremely helpful in finding pu
 3. If the starting point is GEO and obtaining files from SRA, follow the step below:
 
 ## Converting `.sra` files to `.fastq` files
-Do obtain the raw data from SRA, we can use the `prefetch` and `fastq-dump` commands from SRA Toolkit to obtain datasets via SRA accession numbers
+To obtain the raw data from SRA, we can use the `prefetch` and `fastq-dump` commands from SRA Toolkit to obtain datasets via SRA accession numbers
 
 ```
 $ prefetch [acession_1] [acession_2] [acession_3]
 ```
 
-This retrieves datasets in the `.sra` format which we use as input in `fastq-dump` to then obtain files in `.fastq` format.
+This retrieves datasets in the `.sra` format which we use as input to `fastq-dump` to obtain files in `.fastq` format.
 
 ```
 $ fastq-dump *.sra

@@ -114,11 +114,14 @@ The `.bam` file must be sorted before indexing.
 $ samtools sort [-@ threads] [in.bam] [-o out.bam]
 $ samtools sort -@ 10 RelA_rep1.bam > RelA_rep1_sorted.bam
 ```
+---
 
 > We can combine the steps above (changing `bwa aln` for `bwa mem`) into a pipe to simplify the process:
 ```
 bwa mem -t 20 /home/ellora/BWAIndex/hg38.fa $f.fastq | samtools view -q 10 -b -@ 10 | samtools sort -@ 10 -o /home/ellora/projects/nrf2/brca2/bam/$f.bam
 ```
+
+---
 
 #### 2.3.3 flagstat
 After obtaining the **sorted** `.bam` file, we run the code below for quality control to ensure that the `.bam` is of decent quality.
